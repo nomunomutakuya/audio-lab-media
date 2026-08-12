@@ -1,0 +1,97 @@
+baseURL = 'https://nomunomutakuya.github.io/audio-lab-media/'
+languageCode = 'ja'
+defaultContentLanguage = 'ja'
+title = 'AUDIO LAB | DTM・オーディオ機材メタ分析メディア'
+theme = 'PaperMod'
+
+enableRobotsTXT = true
+enableInlineShortcodes = true
+enableEmoji = true
+
+buildDrafts = false
+buildFuture = false
+buildExpired = false
+
+pagination.pagerSize = 10
+
+# 検索機能（PaperMod は Fuse.js による JSON インデックスを利用）
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[minify]
+  disableXML = true
+
+[params]
+  env = 'production'
+  description = 'DTM・オーディオ機材のレビューやスペックを横断的にメタ分析するメディア'
+  author = 'AUDIO LAB'
+  defaultTheme = 'auto'
+  DateFormat = '2006年1月2日'
+
+  # ダーク/ライト切替ボタンを表示
+  disableThemeToggle = false
+
+  # 自動目次
+  ShowToc = true
+  TocOpen = true
+
+  # コードコピーボタン
+  ShowCodeCopyButtons = true
+
+  ShowReadingTime = true
+  ShowShareButtons = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowWordCount = true
+  ShowRssButtonInSectionTermList = true
+  hidemeta = false
+  hideSummary = false
+  showtoc = true
+  tocopen = true
+
+  [params.homeInfoParams]
+    Title = 'AUDIO LAB'
+    Content = 'DTM・オーディオ機材を、データとレビューの横断分析で読み解くメディアです。'
+
+  # 検索ページ（Fuse.js）の設定
+  [params.fuseOpts]
+    isCaseSensitive = false
+    shouldSort = true
+    location = 0
+    distance = 1000
+    threshold = 0.4
+    minMatchCharLength = 0
+    limit = 10
+    keys = ["title", "permalink", "summary", "content"]
+
+# ヘッダーメニュー
+[[menu.main]]
+  identifier = 'posts'
+  name = '記事一覧'
+  url = '/posts/'
+  weight = 10
+
+[[menu.main]]
+  identifier = 'categories'
+  name = 'カテゴリ'
+  url = '/categories/'
+  weight = 20
+
+[[menu.main]]
+  identifier = 'about'
+  name = '運営者情報・規約'
+  url = '/about/'
+  weight = 30
+
+[[menu.main]]
+  identifier = 'search'
+  name = '検索'
+  url = '/search/'
+  weight = 40
+
+[markup.highlight]
+  noClasses = false
+  codeFences = true
+  guessSyntax = true
+  lineNos = false
+  style = 'monokai'
