@@ -8,6 +8,11 @@ enableRobotsTXT = true
 enableInlineShortcodes = true
 enableEmoji = true
 
+# 本サイトは baseURL のサブパス(/audio-lab-media/)配信。記事内の
+# `/images/...` のようなルート相対リンクをそのまま出すとドメイン直下を
+# 指して 404 になるため、baseURL 基準の絶対 URL に書き換える。
+canonifyURLs = true
+
 # Google Analytics 4。PaperMod は params.env = production のときだけ出力する。
 googleAnalytics = "G-HBF74BMKD8"
 
@@ -29,6 +34,10 @@ pagination.pagerSize = 10
   description = 'DTM・宅録向けオーディオインターフェース、モニターヘッドホン、エフェクター（ハード・プラグイン）等のスペックや音質傾向をメタ分析・比較する専門Webメディア。'
   author = 'AUDIO LAB'
   defaultTheme = 'auto'
+  # 記事側で cover 画像が無いときの OGP/Twitter カード既定画像。
+  # PaperMod は absURL で解決するため、先頭スラッシュを付けると baseURL の
+  # サブパス(/audio-lab-media/)が落ちる。相対パスで書くこと。
+  images = ['images/default-ogp.png']
   DateFormat = '2006年1月2日'
 
   # ダーク/ライト切替ボタンを表示

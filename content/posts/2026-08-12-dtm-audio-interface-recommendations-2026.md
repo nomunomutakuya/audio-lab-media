@@ -4,13 +4,12 @@ date: 2026-08-12T22:50:53+09:00
 draft: false
 slug: "dtm-audio-interface-recommendations-2026"
 categories: ["DTM機材"]
-tags: ["オーディオインターフェース", "DTM", "レコーディング"]
+tags: ["オーディオインターフェース", "DTM", "レコーディング", "宅録", "Focusrite", "Universal Audio", "RME", "初心者向け"]
 description: "2026年最新のDTM向けオーディオインターフェース5機種を厳選。初心者から上級者まで用途別に比較解説します。"
 ---
 
-<!-- TODO(画像): static/images/products/dtm-audio-interface.jpg を用意し、下記のコメントを解除して使用
-![DTM向けオーディオインターフェース](/images/products/dtm-audio-interface.jpg)
--->
+![DTM向けオーディオインターフェース](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/dtm-audio-interface.jpg を置いたら上の行をそのパスに戻す -->
 
 DTMの音質を左右するオーディオインターフェースは、予算と用途に合わせた選択が重要です。2026年現在、初心者向けから高性能モデルまで多くの選択肢があります。
 
@@ -24,13 +23,10 @@ DTMの音質を左右するオーディオインターフェースは、予算�
 
 ## 1. Focusrite Scarlett 2i2 (4th Gen)
 
-<!-- TODO(画像): static/images/products/focusrite-scarlett-2i2.jpg を用意し、下記のコメントを解除して使用
-![Focusrite Scarlett 2i2](/images/products/focusrite-scarlett-2i2.jpg)
--->
+![Focusrite Scarlett 2i2](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/focusrite-scarlett-2i2.jpg を置いたら上の行をそのパスに戻す -->
 
-<!-- TODO(動画): 実在する YouTube 動画 ID を確認し、下記のコメントを解除して使用
-{{</* youtube VIDEO_ID */>}}
--->
+{{< video-placeholder >}}
 
 ### 特徴
 
@@ -60,13 +56,10 @@ DTM初心者向けの定番インターフェースです。シンプルなが�
 
 ## 2. Universal Audio Volt 2
 
-<!-- TODO(画像): static/images/products/universal-audio-volt-2.jpg を用意し、下記のコメントを解除して使用
-![Universal Audio Volt 2](/images/products/universal-audio-volt-2.jpg)
--->
+![Universal Audio Volt 2](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/universal-audio-volt-2.jpg を置いたら上の行をそのパスに戻す -->
 
-<!-- TODO(動画): 実在する YouTube 動画 ID を確認し、下記のコメントを解除して使用
-{{</* youtube VIDEO_ID */>}}
--->
+{{< video-placeholder >}}
 
 ### 特徴
 
@@ -96,13 +89,10 @@ DTM初心者向けの定番インターフェースです。シンプルなが�
 
 ## 3. RME Babyface Pro FS
 
-<!-- TODO(画像): static/images/products/rme-babyface-pro-fs.jpg を用意し、下記のコメントを解除して使用
-![RME Babyface Pro FS](/images/products/rme-babyface-pro-fs.jpg)
--->
+![RME Babyface Pro FS](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/rme-babyface-pro-fs.jpg を置いたら上の行をそのパスに戻す -->
 
-<!-- TODO(動画): 実在する YouTube 動画 ID を確認し、下記のコメントを解除して使用
-{{</* youtube VIDEO_ID */>}}
--->
+{{< video-placeholder >}}
 
 ### 特徴
 
@@ -132,13 +122,10 @@ DTM初心者向けの定番インターフェースです。シンプルなが�
 
 ## 4. Antelope Audio Orion Studio
 
-<!-- TODO(画像): static/images/products/antelope-audio-orion-studio.jpg を用意し、下記のコメントを解除して使用
-![Antelope Audio Orion Studio](/images/products/antelope-audio-orion-studio.jpg)
--->
+![Antelope Audio Orion Studio](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/antelope-audio-orion-studio.jpg を置いたら上の行をそのパスに戻す -->
 
-<!-- TODO(動画): 実在する YouTube 動画 ID を確認し、下記のコメントを解除して使用
-{{</* youtube VIDEO_ID */>}}
--->
+{{< video-placeholder >}}
 
 ### 特徴
 
@@ -168,13 +155,10 @@ DTM初心者向けの定番インターフェースです。シンプルなが�
 
 ## 5. Audient ASP800
 
-<!-- TODO(画像): static/images/products/audient-asp800.jpg を用意し、下記のコメントを解除して使用
-![Audient ASP800](/images/products/audient-asp800.jpg)
--->
+![Audient ASP800](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/audient-asp800.jpg を置いたら上の行をそのパスに戻す -->
 
-<!-- TODO(動画): 実在する YouTube 動画 ID を確認し、下記のコメントを解除して使用
-{{</* youtube VIDEO_ID */>}}
--->
+{{< video-placeholder >}}
 
 ### 特徴
 

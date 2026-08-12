@@ -1,0 +1,19 @@
+{{- /*
+  デモ動画の差し替え待ち枠。
+
+  記事生成時点では実在する YouTube 動画 ID が確定しないため、壊れた iframe を
+  出す代わりにこの枠を挿入する。動画 ID が判明したら、記事内のこの
+  ショートコードを {{ printf "{{< youtube VIDEO_ID >}}" }} に置き換える。
+
+  引数: 第1引数(任意) 製品名などのラベル
+*/ -}}
+{{- $label := .Get 0 | default "" -}}
+<div class="video-placeholder" role="img" aria-label="デモ動画は準備中です">
+  <svg viewBox="0 0 24 24" width="44" height="44" aria-hidden="true" focusable="false">
+    <path fill="currentColor" d="M10 16.5v-9l6 4.5-6 4.5zM12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z"/>
+  </svg>
+  <p class="video-placeholder__text">デモ動画は準備中です</p>
+  {{- with $label }}
+  <p class="video-placeholder__label">{{ . }}</p>
+  {{- end }}
+</div>

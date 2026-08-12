@@ -4,13 +4,12 @@ date: 2026-08-12T23:30:33+09:00
 draft: false
 slug: "dtm-monitor-headphones-2026"
 categories: ["DTM機材"]
-tags: ["モニターヘッドホン", "DTM機材", "ミキシング"]
+tags: ["モニターヘッドホン", "DTM機材", "ミキシング", "宅録", "SONY", "audio-technica", "Beyerdynamic", "密閉型"]
 description: "2026年版DTM向けモニターヘッドホン5機種を比較。定番から高遮音モデルまで用途別に紹介します。"
 ---
 
-<!-- TODO(画像): static/images/products/eyecatch.jpg を用意し、下記のコメントを解除して使用
-![DTM向けモニターヘッドホンおすすめ5選](/images/products/eyecatch.jpg)
--->
+![DTM向けモニターヘッドホンおすすめ5選](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/eyecatch.jpg を置いたら上の行をそのパスに戻す -->
 
 DTMのミキシング・宅録に使えるモニターヘッドホンを5機種厳選しました。価格帯と特性が異なる定番機を中心に紹介します。
 
@@ -24,13 +23,10 @@ DTMのミキシング・宅録に使えるモニターヘッドホンを5機種�
 
 ## 1. SONY MDR-CD900ST
 
-<!-- TODO(画像): static/images/products/sony-mdr-cd900st.jpg を用意し、下記のコメントを解除して使用
-![SONY MDR-CD900ST](/images/products/sony-mdr-cd900st.jpg)
--->
+![SONY MDR-CD900ST](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/sony-mdr-cd900st.jpg を置いたら上の行をそのパスに戻す -->
 
-<!-- TODO(動画): 実在する YouTube 動画 ID を確認し、下記のコメントを解除して使用
-{{</* youtube VIDEO_ID */>}}
--->
+{{< video-placeholder >}}
 
 ### 特徴
 
@@ -59,13 +55,10 @@ DTMのミキシング・宅録に使えるモニターヘッドホンを5機種�
 
 ## 2. audio-technica ATH-M50x
 
-<!-- TODO(画像): static/images/products/audio-technica-ath-m50x.jpg を用意し、下記のコメントを解除して使用
-![audio-technica ATH-M50x](/images/products/audio-technica-ath-m50x.jpg)
--->
+![audio-technica ATH-M50x](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/audio-technica-ath-m50x.jpg を置いたら上の行をそのパスに戻す -->
 
-<!-- TODO(動画): 実在する YouTube 動画 ID を確認し、下記のコメントを解除して使用
-{{</* youtube VIDEO_ID */>}}
--->
+{{< video-placeholder >}}
 
 ### 特徴
 
@@ -95,13 +88,10 @@ DTMのミキシング・宅録に使えるモニターヘッドホンを5機種�
 
 ## 3. Beyerdynamic DT 770 PRO
 
-<!-- TODO(画像): static/images/products/beyerdynamic-dt-770-pro.jpg を用意し、下記のコメントを解除して使用
-![Beyerdynamic DT 770 PRO](/images/products/beyerdynamic-dt-770-pro.jpg)
--->
+![Beyerdynamic DT 770 PRO](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/beyerdynamic-dt-770-pro.jpg を置いたら上の行をそのパスに戻す -->
 
-<!-- TODO(動画): 実在する YouTube 動画 ID を確認し、下記のコメントを解除して使用
-{{</* youtube VIDEO_ID */>}}
--->
+{{< video-placeholder >}}
 
 ### 特徴
 
@@ -130,13 +120,10 @@ DTMのミキシング・宅録に使えるモニターヘッドホンを5機種�
 
 ## 4. YAMAHA HPH-MT8
 
-<!-- TODO(画像): static/images/products/yamaha-hph-mt8.jpg を用意し、下記のコメントを解除して使用
-![YAMAHA HPH-MT8](/images/products/yamaha-hph-mt8.jpg)
--->
+![YAMAHA HPH-MT8](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/yamaha-hph-mt8.jpg を置いたら上の行をそのパスに戻す -->
 
-<!-- TODO(動画): 実在する YouTube 動画 ID を確認し、下記のコメントを解除して使用
-{{</* youtube VIDEO_ID */>}}
--->
+{{< video-placeholder >}}
 
 ### 特徴
 
@@ -165,13 +152,10 @@ DTMのミキシング・宅録に使えるモニターヘッドホンを5機種�
 
 ## 5. ゼンハイザー HD 25
 
-<!-- TODO(画像): static/images/products/sennheiser-hd-25.jpg を用意し、下記のコメントを解除して使用
-![ゼンハイザー HD 25](/images/products/sennheiser-hd-25.jpg)
--->
+![ゼンハイザー HD 25](/images/placeholder.svg)
+<!-- 画像差し替え待ち: static/images/products/sennheiser-hd-25.jpg を置いたら上の行をそのパスに戻す -->
 
-<!-- TODO(動画): 実在する YouTube 動画 ID を確認し、下記のコメントを解除して使用
-{{</* youtube VIDEO_ID */>}}
--->
+{{< video-placeholder >}}
 
 ### 特徴
 

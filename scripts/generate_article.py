@@ -49,6 +49,9 @@ DEFAULT_PRODUCTS = 5
 TARGET_CHARS = (1500, 2000)
 CHARS_HARD_MAX = 2600
 
+# tags の許容個数(SEO 上の下限・上限)
+TAGS_RANGE = (4, 8)
+
 # effort パラメータは Claude 5 系のみ対応。Haiku 4.5 に送ると 400 になる。
 EFFORT_CAPABLE = re.compile(r"(?:opus|sonnet|fable)-5")
 
@@ -64,6 +67,10 @@ CACHE_MIN_TOKENS_FALLBACK = 4096
 
 VIDEO_PLACEHOLDER = "VIDEO_ID"
 IMAGE_DIR = "/images/products"
+
+# 実ファイルが無い画像の差し替え先(static/ 配下に実在させておく)
+PLACEHOLDER_IMAGE = "/images/placeholder.svg"
+DEFAULT_OGP_IMAGE = "/images/default-ogp.png"
 
 SYSTEM_PROMPT = """\
 あなたは DTM 機材メディア「AUDIO LAB」の編集者です。
@@ -128,9 +135,13 @@ date: (ユーザーメッセージで指定された値をそのまま使う)
 draft: false
 slug: "english-kebab-case"
 categories: ["DTM機材"]
-tags: ["タグ1", "タグ2"]
+tags: ["タグ1", "タグ2", "タグ3", "タグ4"]
 description: "SEO用要約(全角120文字以内)"
 ---
+
+**tags は SEO最適化のため、必ず 4〜8 個の関連キーワードを設定すること(厳守)。**
+3個以下・9個以上は不可。取り上げた全メーカー名、機材カテゴリ、価格帯、用途を
+それぞれ1語ずつ入れると過不足なく収まる。
 
 # 冒頭(見出しなし、この順)
 
@@ -286,6 +297,23 @@ def front_matter_value(markdown: str, key: str) -> str | None:
     return found.group(1).strip() if found else None
 
 
+def front_matter_list(markdown: str, key: str) -> list[str] | None:
+    """Front Matter のインラインリスト(`tags: ["a", "b"]`)を要素の一覧として返す。
+
+    キーが無い場合は None、`tags: []` の場合は空リストを返す(区別が必要なため)。
+    """
+    match = re.match(r"^---\r?\n(.*?)\r?\n---", markdown, re.DOTALL)
+    if not match:
+        return None
+    found = re.search(rf"^{re.escape(key)}:\s*\[(.*?)\]\s*$", match.group(1), re.MULTILINE)
+    if not found:
+        return None
+    inner = found.group(1).strip()
+    if not inner:
+        return []
+    return [item.strip().strip("\"'") for item in inner.split(",") if item.strip()]
+
+
 def force_date(markdown: str, iso_date: str) -> str:
     """Front Matter の date 行を実際の生成時刻で上書きする。
 
@@ -322,8 +350,7 @@ def fix_affiliate_urls(markdown: str) -> str:
 def neutralize_media(markdown: str) -> tuple[str, int, int]:
     """未確定の画像・YouTube 埋め込みを HTML コメントの TODO に退避する。
 
-    モデルは実在する画像 URL も動画 ID も知らない。そのまま出すと本番サイトに
-    404 画像と壊れた iframe が並ぶため、編集部が差し替えるまでコメント化する。
+    --placeholders comment 用の旧挙動。ページには何も表示されない。
     戻り値は (変換後 Markdown, 画像件数, 動画件数)。
     """
     videos = 0
@@ -358,6 +385,46 @@ def neutralize_media(markdown: str) -> tuple[str, int, int]:
     return markdown, images, videos
 
 
+def fallback_media(markdown: str) -> tuple[str, int, int]:
+    """画像・動画を「実際に表示される代替アセット」に差し替える。
+
+    - 画像: static/ に実ファイルがあればそのまま使う。無ければ表示可能な
+      プレースホルダ画像に差し替え、意図したパスをコメントで残す。
+    - 動画: 実在する動画 ID は生成できないため、video-placeholder
+      ショートコード(ダミー枠)に差し替える。
+
+    TODO コメントで丸ごと隠す comment モードと違い、ページ上に必ず何かが
+    表示される。戻り値は (変換後 Markdown, 差し替えた画像数, 動画数)。
+    """
+    videos = 0
+    images = 0
+
+    def repl_video(match: re.Match[str]) -> str:
+        nonlocal videos
+        video_id = match.group(1).strip()
+        # 実在が確認できない ID(既定のプレースホルダ)だけを差し替える。
+        # 編集部が本物の ID を入れた記事を再処理しても壊さないため。
+        if video_id and video_id != VIDEO_PLACEHOLDER:
+            return match.group(0)
+        videos += 1
+        return "{{< video-placeholder >}}"
+
+    def repl_image(match: re.Match[str]) -> str:
+        nonlocal images
+        alt, path = match.group(1), match.group(2)
+        if (REPO_ROOT / "static" / path.lstrip("/")).exists():
+            return match.group(0)
+        images += 1
+        return (
+            f"![{alt}]({PLACEHOLDER_IMAGE})\n"
+            f"<!-- 画像差し替え待ち: static{path} を置いたら上の行をそのパスに戻す -->"
+        )
+
+    markdown = re.sub(r"\{\{<\s*youtube\s+([^>\n]*?)\s*>\}\}", repl_video, markdown)
+    markdown = re.sub(r"!\[([^\]]*)\]\((/images/[^)\s]+)\)", repl_image, markdown)
+    return markdown, images, videos
+
+
 def lint(markdown: str, products: int) -> list[str]:
     """文体・構成のチェック。ビルドは止めず警告として返す。"""
     warnings: list[str] = []
@@ -382,6 +449,16 @@ def lint(markdown: str, products: int) -> list[str]:
     for phrase in banned:
         if phrase in body:
             warnings.append(f"禁止表現が残っています: 「{phrase}」")
+
+    # tags は SEO 上 4〜8 個。Front Matter から取得して件数を検査する。
+    tags = front_matter_list(markdown, "tags")
+    if tags is None:
+        warnings.append("tags が Front Matter にありません")
+    elif not TAGS_RANGE[0] <= len(tags) <= TAGS_RANGE[1]:
+        warnings.append(
+            f"tags が {len(tags)} 個。SEO のため {TAGS_RANGE[0]}〜{TAGS_RANGE[1]} 個にしてください"
+            f" ({', '.join(tags) if tags else '空'})"
+        )
 
     if "本記事にはアフィリエイトリンクが含まれます" not in body:
         warnings.append("PR表記がありません")
@@ -545,9 +622,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--placeholders",
-        default="comment",
-        choices=["comment", "raw"],
-        help="画像/動画プレースホルダの扱い。comment=TODOコメント化, raw=そのまま出力",
+        default="fallback",
+        choices=["fallback", "comment", "raw"],
+        help=(
+            "画像/動画プレースホルダの扱い。fallback=表示可能な代替アセットに差し替え, "
+            "comment=TODOコメントに退避(非表示), raw=モデル出力のまま"
+        ),
     )
     parser.add_argument("--slug", help="ファイル名の slug を明示指定する(省略時は自動)")
     parser.add_argument("--outdir", type=Path, default=POSTS_DIR, help="出力先ディレクトリ")
@@ -628,6 +708,8 @@ def main(argv: list[str] | None = None) -> int:
     images = videos = 0
     if args.placeholders == "comment":
         markdown, images, videos = neutralize_media(markdown)
+    elif args.placeholders == "fallback":
+        markdown, images, videos = fallback_media(markdown)
 
     warnings = lint(markdown, args.products)
 
@@ -649,8 +731,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  title: {title}")
         print(f"  {len(markdown)} 文字")
 
-    if args.placeholders == "comment" and (images or videos):
-        print(f"  プレースホルダ: 画像 {images} 件 / 動画 {videos} 件 を TODO コメント化")
+    if images or videos:
+        if args.placeholders == "comment":
+            print(f"  プレースホルダ: 画像 {images} 件 / 動画 {videos} 件 を TODO コメント化")
+        else:
+            print(
+                f"  プレースホルダ: 画像 {images} 件 → {PLACEHOLDER_IMAGE} /"
+                f" 動画 {videos} 件 → video-placeholder ショートコード"
+            )
 
     if warnings:
         print("\n[品質チェック]", file=sys.stderr)
