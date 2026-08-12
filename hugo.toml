@@ -1,7 +1,7 @@
 baseURL = 'https://nomunomutakuya.github.io/audio-lab-media/'
 languageCode = 'ja'
 defaultContentLanguage = 'ja'
-title = 'AUDIO LAB | DTM・オーディオ機材メタ分析メディア'
+title = 'AUDIO LAB | DTM・オーディオ機材・エフェクターのメタ分析メディア'
 theme = 'PaperMod'
 
 enableRobotsTXT = true
@@ -26,7 +26,7 @@ pagination.pagerSize = 10
 
 [params]
   env = 'production'
-  description = 'DTM・オーディオ機材のレビューやスペックを横断的にメタ分析するメディア'
+  description = 'DTM・宅録向けオーディオインターフェース、モニターヘッドホン、エフェクター（ハード・プラグイン）等のスペックや音質傾向をメタ分析・比較する専門Webメディア。'
   author = 'AUDIO LAB'
   defaultTheme = 'auto'
   DateFormat = '2006年1月2日'
