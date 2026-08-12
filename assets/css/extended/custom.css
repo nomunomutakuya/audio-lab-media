@@ -1,0 +1,235 @@
+/* AUDIO LAB — PaperMod 拡張スタイル
+ *
+ * PaperMod は assets/css/extended/*.css を自動で読み込み、テーマ本体の CSS の
+ * 後ろに連結する。色は PaperMod の CSS 変数を使い、ライト/ダーク両対応にする。
+ *   --theme(背景) --entry(カード背景) --primary(本文) --secondary(補助)
+ *   --tertiary(薄い背景) --content(本文色) --border(境界線)
+ */
+
+/* ---------------------------------------------------------------- 本文 */
+
+.post-content {
+  line-height: 1.85;
+}
+
+/* 段落は 1〜2 文で改行される想定。行間より段落間を広く取ってリズムを作る */
+.post-content p {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+}
+
+/* ------------------------------------------------------------ 見出し */
+
+.post-content h2,
+.post-content h3 {
+  margin-top: 2.2em;
+  margin-bottom: 0.8em;
+  line-height: 1.4;
+}
+
+/* 製品セクションの区切りを視覚的に強くする */
+.post-content h2 {
+  padding-bottom: 0.4em;
+  border-bottom: 2px solid var(--border);
+  font-size: 1.5rem;
+}
+
+.post-content h3 {
+  padding-left: 0.6em;
+  border-left: 4px solid var(--secondary);
+  font-size: 1.2rem;
+}
+
+/* 見出し直後の要素は上マージンを詰める */
+.post-content h2 + *,
+.post-content h3 + * {
+  margin-top: 0;
+}
+
+/* --------------------------------------------------------------- 画像 */
+
+.post-content img {
+  display: block;
+  margin: 2em auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.post-content figure {
+  margin: 2em 0;
+}
+
+.post-content figure img {
+  margin: 0 auto;
+}
+
+/* ------------------------------------------------- YouTube 埋め込み */
+
+/* Hugo 組み込みの youtube ショートコードは、インラインスタイル付きの
+ * ラッパー div + 絶対配置の iframe を出力する。ラッパーには :has() で
+ * 余白を、iframe 側に角丸を当てる（iframe がラッパーを埋めるため）。 */
+.post-content iframe {
+  border-radius: 8px;
+  border: 0;
+}
+
+.post-content div:has(> iframe) {
+  margin: 2em 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* :has() 非対応ブラウザ向けのフォールバック */
+.post-content iframe:not(:only-child),
+.post-content > iframe {
+  margin: 2em 0;
+}
+
+/* --------------------------------------------- blockquote（Callout） */
+
+.post-content blockquote {
+  margin: 2em 0;
+  padding: 1.2em 1.4em;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--secondary);
+  border-radius: 8px;
+  background: var(--code-bg);
+  font-style: normal; /* PaperMod の既定のイタリックを打ち消す */
+  color: var(--content);
+}
+
+.post-content blockquote p {
+  margin-bottom: 0.6em;
+}
+
+.post-content blockquote p:last-child,
+.post-content blockquote ul:last-child,
+.post-content blockquote ol:last-child {
+  margin-bottom: 0;
+}
+
+.post-content blockquote ul {
+  margin-bottom: 0;
+  padding-left: 1.2em;
+}
+
+/* 「🎯 こんな人におすすめ」ボックスの見出し行 */
+.post-content blockquote strong {
+  display: inline-block;
+  margin-bottom: 0.3em;
+  font-size: 1.05em;
+}
+
+/* ----------------------------------------------------------- テーブル */
+
+.post-content table {
+  margin: 2em 0;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.94rem;
+}
+
+.post-content table th {
+  background: var(--code-bg);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.post-content table th,
+.post-content table td {
+  padding: 0.7em 0.9em;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+
+/* 横幅の狭い端末では表を横スクロールさせる */
+.post-content .table-wrapper,
+.post-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* --------------------------------------------------------- 箇条書き */
+
+.post-content ul,
+.post-content ol {
+  margin-bottom: 1.5em;
+  padding-left: 1.4em;
+}
+
+.post-content li {
+  margin-bottom: 0.5em;
+}
+
+.post-content li > strong:first-child {
+  color: var(--primary);
+}
+
+/* ------------------------------------------- アフィリエイトリンク行 */
+
+/* 「[Amazonで…] | [サウンドハウスで探す]」の段落をボタン風に見せる。
+ * リンク2本とパイプだけで構成された段落を :has() で拾う。 */
+.post-content p:has(> a[href*="amazon.co.jp/s?k="]) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7em;
+  align-items: center;
+  margin: 1.8em 0 2.4em;
+  font-size: 0;         /* リンク間の区切り「|」とテキストノードを隠す */
+}
+
+.post-content p:has(> a[href*="amazon.co.jp/s?k="]) > a {
+  flex: 1 1 auto;
+  min-width: 14em;
+  padding: 0.85em 1.2em;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--code-bg);
+  box-shadow: none;     /* PaperMod のリンク下線を打ち消す */
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.post-content p:has(> a[href*="amazon.co.jp/s?k="]) > a:hover {
+  transform: translateY(-1px);
+  background: var(--tertiary);
+}
+
+/* ------------------------------------------------------- PR表記の行 */
+
+/* Front Matter 直後の PR 表記は控えめに、ただし視認できる大きさで */
+.post-content > blockquote:first-child {
+  margin-top: 0;
+  padding: 0.7em 1em;
+  border-left-width: 3px;
+  background: transparent;
+  font-size: 0.85rem;
+  color: var(--secondary);
+}
+
+/* --------------------------------------------------------- 目次(TOC) */
+
+.toc {
+  margin-bottom: 2.5em;
+  border-radius: 8px;
+}
+
+/* ------------------------------------------------------- レスポンシブ */
+
+@media screen and (max-width: 600px) {
+  .post-content h2 {
+    font-size: 1.32rem;
+  }
+
+  .post-content h3 {
+    font-size: 1.1rem;
+  }
+
+  .post-content p:has(> a[href*="amazon.co.jp/s?k="]) > a {
+    min-width: 100%;
+  }
+}
