@@ -3,6 +3,15 @@
 /resources/_gen/
 /.hugo_build.lock
 
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
 # OS
 .DS_Store
 Thumbs.db
