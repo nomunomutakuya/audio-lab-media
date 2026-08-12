@@ -34,149 +34,106 @@ POSTS_DIR = REPO_ROOT / "content" / "posts"
 
 JST = timezone(timedelta(hours=9), "JST")
 
-# claude-3-5-sonnet-20241022 は 2025-10-28 に提供終了(404)。
-# 公式の後継が claude-sonnet-5。--model / ANTHROPIC_MODEL で上書き可能。
-DEFAULT_MODEL = "claude-sonnet-5"
+# コスト優先の既定。claude-3-5-haiku / claude-3-5-sonnet-20241022 はいずれも
+# 提供終了(404)のため、現行の最安モデルを既定にする。
+# 品質を上げたいときは --model claude-sonnet-5 を付ける。
+DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 DEFAULT_TARGET = "DTM向けオーディオインターフェースおすすめ5選 2026"
-DEFAULT_MAX_TOKENS = 24000
-DEFAULT_EFFORT = "medium"
+# 本文1,500〜2,000文字 ≒ 出力1,500〜2,000トークン。思考分の余裕を見て 4000。
+DEFAULT_MAX_TOKENS = 4000
+DEFAULT_EFFORT = "low"
 DEFAULT_PRODUCTS = 5
+
+# 本文の目標文字数(Front Matter とコメントを除く)
+TARGET_CHARS = (1500, 2000)
+CHARS_HARD_MAX = 2600
+
+# effort パラメータは Claude 5 系のみ対応。Haiku 4.5 に送ると 400 になる。
+EFFORT_CAPABLE = re.compile(r"(?:opus|sonnet|fable)-5")
 
 VIDEO_PLACEHOLDER = "VIDEO_ID"
 IMAGE_DIR = "/images/products"
 
 SYSTEM_PROMPT = """\
-あなたは DTM・オーディオ機材専門メディア「AUDIO LAB」の編集者です。
-国内外のレビュー・スペック・価格を横断的に収集し、メタ分析として整理・比較した
-記事を書きます。読者は DTM 経験者から購入検討中の初心者まで幅広い。
+あなたは DTM 機材メディア「AUDIO LAB」の編集者です。
+ニュース速報の文体で、結論から先に短く書きます。
 
-# 出力形式(厳守)
+# 絶対条件
 
-Hugo 用 Markdown ファイルの中身だけを出力する。
-前置き、あとがき、``` によるコードフェンスでの囲みは一切不要。
-出力は必ず `---` で始まる YAML Front Matter から始める。
+- 本文は全体で{lo}〜{hi}文字。超えたら説明を削る。長文の地の文は禁止。
+- 1段落は最大2文。説明が長くなるなら箇条書きに置き換える。
+- 禁止表現: 挨拶(こんにちは)、前置き(〜について解説します/見ていきましょう)、
+  締め(いかがでしたでしょうか/結論として/まとめると)、記事自己言及(本記事では/この記事では)、
+  曖昧な推量止め(〜ではないでしょうか/〜と言えるでしょう)、絵文字(🎯を除く)、煽り表現。
+- 敬体(です・ます)で統一。
+- 型番・価格・スペックに確証がなければ「公表なし」と書く。数値を推測で埋めない。
+  存在しない製品を作らない。実機を試用した体験談を書かない。
+
+# 出力形式
+
+Markdown 本文のみを出力する。コードフェンスで囲まない。Front Matter から始める。
 
 ---
-title: "記事タイトル"
+title: "記事タイトル(全角40文字以内)"
 date: {date}
 draft: false
-slug: "english-kebab-case-slug"
+slug: "english-kebab-case"
 categories: ["DTM機材"]
 tags: ["タグ1", "タグ2"]
-description: "SEOメタディスクリプション。全角120文字以内"
+description: "SEO用要約(全角120文字以内)"
 ---
 
-Front Matter の規則:
-- `title`: 全角40文字以内。具体的な機材カテゴリと年を含める。
-- `date`: 上記の値をそのまま使う。
-- `slug`: 英小文字ケバブケース。日本語・記号・空白は不可。
-- `tags`: 4〜8個。取り上げた全メーカー名 + 機材カテゴリ + 価格帯 + 用途。
-- `description`: 記事の結論の要点を含める。
+# 冒頭(見出しなし、この順)
 
-# 記事全体の構成
+1. アイキャッチ画像: `![記事テーマ](/images/products/eyecatch.jpg)`
+2. 概要を2文だけ。
+3. ポイント3選の引用枠:
 
-## 1. PR表記(Front Matter 直後、見出しなしの1行)
+> **この記事のポイント**
+>
+> - ポイント1
+> - ポイント2
+> - ポイント3
 
-必ず次の1行をそのまま置く:
+4. PR表記を1行: 本記事にはアフィリエイトリンクが含まれます。
 
-> 本記事にはアフィリエイトリンクが含まれます。
+# 製品セクション(製品数 = {products})
 
-## 2. リード文(見出しなし、3〜5行)
+**製品を1つずつ独立した H2 セクションで扱う。まとめて論じるのは禁止。**
+{products}製品なら H2 を{products}個作る。見出しは `## 1. メーカー名 製品名` の形式で通し番号を振る。
 
-何を比較したのか、読者が何を持ち帰れるのかを短文で示す。
+各セクションは以下の順で構成する。
 
-## 3. 比較早見表(H2「まず結論:比較早見表」)
-
-取り上げる全製品を1行ずつ並べた Markdown 表。
-列は「製品名 / 実勢価格 / 入出力 / 最大解像度 / こんな人向け」。
-
-## 4. 製品ごとの個別セクション(最重要)
-
-**製品を1つずつ、完全に独立した H2 セクションで扱う。**
-複数製品をまとめて論じることは禁止。「その他の選択肢」のような
-一括セクションも禁止。{products}製品なら H2 セクションを{products}個作る。
-
-各製品セクションは以下の6要素をこの順で必ず含める:
-
-### ① 製品名(H2)
-
-`## 1. メーカー名 製品名` の形式。通し番号を振る。
-
-### ② 製品画像 + YouTubeデモ動画
-
-画像と動画をこの順に置く。**実在する URL や動画 ID を絶対に創作しないこと。**
-必ず以下のプレースホルダをそのまま使う(編集部が後から差し替える):
+画像と動画(実在する URL や動画 ID を創作せず、下記をそのまま使う):
 
 ![メーカー名 製品名](/images/products/PRODUCT_SLUG.jpg)
 
 {{{{< youtube VIDEO_ID >}}}}
 
-`PRODUCT_SLUG` は製品名の英小文字ケバブケース(例: `focusrite-scarlett-4i4`)に置き換える。
+`PRODUCT_SLUG` は製品名の英小文字ケバブケース(例: `focusrite-scarlett-2i2`)に置き換える。
 `VIDEO_ID` は置き換えず、この文字列のまま出力する。
 
-### ③ 音質・機能の特徴
+次に `### 特徴`。2行程度の概要のあと、太字箇条書き3〜4項目:
 
-H3 見出し `### 音質・機能の特徴`。
-1〜2文の導入のあと、太字を使った箇条書きで3〜5項目。形式:
+- **プリアンプ**: 短い説明
+- **接続**: 短い説明
 
-- **プリアンプ**: 特徴の説明
-- **変換品質**: 特徴の説明
+次に `### スペック・動作環境`。Markdown 表で記載する。
+行は「入出力 / 解像度 / 対応OS / 接続方式 / 電源 / 実勢価格」。
 
-### ④ スペック・動作環境
+次に引用枠を1〜2行(見出しなし):
 
-H3 見出し `### スペック・動作環境`。Markdown 表で記載。
-行は「入出力端子 / AD/DA 解像度 / 対応 OS / 接続方式 / 電源 / 実測レイテンシ目安 / 実勢価格」。
-不明な項目は「公表なし」と書く。数値を推測で埋めない。
-
-### ⑤ おすすめ用途(引用ボックス)
-
-H3 見出しなし。`>` の引用ブロックで記述。1行目は必ず絵文字付きの見出し:
-
-> **🎯 こんな人・こんな用途におすすめ**
+> **🎯 こんな人におすすめ**
 >
-> - 用途1の具体的な説明
-> - 用途2の具体的な説明
+> - 用途を1行で
 
-### ⑥ アフィリエイト検索リンク
+セクション末尾にアフィリエイト行を置く。**URL 内の空白は必ず `+` に置き換える。**
 
-セクション末尾に次の1行を置く。**URL 内の空白は必ず `+` に置き換える。**
+[Amazonで見る](https://www.amazon.co.jp/s?k=製品名) | [サウンドハウスで見る](https://www.soundhouse.co.jp/search/index?s_ak=製品名)
 
-[Amazonで「製品名」の価格を見る](https://www.amazon.co.jp/s?k=製品名) | [サウンドハウスで探す](https://www.soundhouse.co.jp/search/index?s_ak=製品名)
+# 末尾
 
-## 5. 独自メタ分析(H2「メタ分析:国内外の評価はどこで食い違うか」)
-
-この記事の核。国内レビューと海外レビューで評価軸がどう違うか、
-称賛と不満がどの論点に集中しているかを傾向として整理する。
-割合や件数に触れる場合は「傾向として」「〜が目立つ」等、
-集計手法の限界がわかる表現にとどめる。精密な統計を装わない。
-
-## 6. 選び方(H2「結局どれを選ぶか」)
-
-用途別に「この条件ならこれ」を明示する。曖昧な玉虫色の結論にしない。
-「この5機種のどれも合わない人」のケースも1つ挙げる。
-
-# 文体(最重要・違反は差し戻し対象)
-
-ニュース速報ブログの文体で書く。以下は**完全禁止**:
-
-- 「〜について解説していきます」「〜を見ていきましょう」等の予告・前置き
-- 「いかがでしたでしょうか」「まとめると」「結論として」等の締め・つなぎ
-- 「本記事では」「この記事を読めば」等の記事自己言及
-- 「〜ではないでしょうか」「〜と言えるでしょう」等の曖昧な推量止め
-- 絵文字(⑤の🎯を除く)、過剰な感嘆符、煽り表現
-
-守るべきこと:
-
-- **1段落は最大1〜2文。** 3文以上書いたら必ず改行して段落を分ける。
-  スクロールしやすいリズムを最優先する。
-- 事実 → 評価 の順で短く言い切る。修飾を重ねない。
-- 体言止めと常体・敬体の混在を避け、敬体(です・ます)で統一する。
-- 専門用語は使ってよいが初出時に一言補足する
-  (例:「レイテンシ(入力から出力までの遅延)」)。
-- 断定できることと推測を明確に区別する。
-- 実機を試用した体験談を捏造しない。データとレビューの分析として書く。
-- 型番・価格・スペックに確証がない場合は「公表なし」「執筆時点の実勢」等の
-  留保を付けるか、言及を避ける。存在しない製品を作らない。
+`## 選び方` の H2 を置き、用途別に1行ずつの箇条書きだけを書く。地の文は不要。
 """
 
 USER_PROMPT_TEMPLATE = """\
@@ -184,9 +141,26 @@ USER_PROMPT_TEMPLATE = """\
 
 テーマ: {target}
 取り上げる製品数: {products}
+本文の文字数: {lo}〜{hi}文字(厳守)
 
 Front Matter の `date` には次の値をそのまま使ってください: {date}
 """
+
+
+def render_system_prompt(products: int, iso_date: str) -> str:
+    return SYSTEM_PROMPT.format(
+        date=iso_date, products=products, lo=TARGET_CHARS[0], hi=TARGET_CHARS[1]
+    )
+
+
+def render_user_prompt(target: str, products: int, iso_date: str) -> str:
+    return USER_PROMPT_TEMPLATE.format(
+        target=target,
+        products=products,
+        date=iso_date,
+        lo=TARGET_CHARS[0],
+        hi=TARGET_CHARS[1],
+    )
 
 
 # --- ユーティリティ ------------------------------------------------------
@@ -299,8 +273,11 @@ def lint(markdown: str, products: int) -> list[str]:
     body = re.sub(r"^---\r?\n.*?\r?\n---", "", markdown, flags=re.DOTALL)
 
     banned = [
+        "こんにちは",
         "解説していきます",
+        "解説します",
         "見ていきましょう",
+        "紹介していきます",
         "いかがでしたでしょうか",
         "いかがでしょうか",
         "結論として",
@@ -308,6 +285,7 @@ def lint(markdown: str, products: int) -> list[str]:
         "本記事では",
         "この記事では",
         "ではないでしょうか",
+        "と言えるでしょう",
     ]
     for phrase in banned:
         if phrase in body:
@@ -315,6 +293,25 @@ def lint(markdown: str, products: int) -> list[str]:
 
     if "本記事にはアフィリエイトリンクが含まれます" not in body:
         warnings.append("PR表記がありません")
+
+    # 本文の実文字数(コメント・画像・リンクURL・表を除いた地の文+箇条書き)
+    prose = re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL)
+    prose = re.sub(r"\[[^\]]*\]\([^)]*\)", "", prose)
+    prose = re.sub(r"^\|.*$", "", prose, flags=re.MULTILINE)
+    chars = len(re.sub(r"\s", "", prose))
+    lo, hi = TARGET_CHARS
+    if chars > CHARS_HARD_MAX:
+        warnings.append(f"本文が {chars} 文字。目標 {lo}〜{hi} を大きく超過")
+    elif chars < lo * 0.7:
+        warnings.append(f"本文が {chars} 文字。目標 {lo}〜{hi} に対して不足")
+
+    # アイキャッチ = 最初の H2 より前に置かれた画像。ファイル名は問わない。
+    lead = body.split("\n## ", 1)[0]
+    if IMAGE_DIR not in lead:
+        warnings.append("冒頭のアイキャッチ画像がありません")
+
+    if "**この記事のポイント**" not in body:
+        warnings.append("冒頭のポイント3選の引用枠がありません")
 
     h2_count = len(re.findall(r"^## ", body, re.MULTILINE))
     if h2_count < products:
@@ -358,21 +355,23 @@ def build_client() -> anthropic.Anthropic:
 
 def generate(client: anthropic.Anthropic, args: argparse.Namespace, iso_date: str) -> str:
     """Claude を呼び出して Markdown 本文を返す。"""
-    # 長文生成のためストリーミングで受ける(非ストリーミングは HTTP タイムアウトの恐れ)。
-    with client.messages.stream(
-        model=args.model,
-        max_tokens=args.max_tokens,
-        system=SYSTEM_PROMPT.format(date=iso_date, products=args.products),
-        output_config={"effort": args.effort},
-        messages=[
+    kwargs: dict = {
+        "model": args.model,
+        "max_tokens": args.max_tokens,
+        "system": render_system_prompt(args.products, iso_date),
+        "messages": [
             {
                 "role": "user",
-                "content": USER_PROMPT_TEMPLATE.format(
-                    target=args.target, products=args.products, date=iso_date
-                ),
+                "content": render_user_prompt(args.target, args.products, iso_date),
             }
         ],
-    ) as stream:
+    }
+    # effort は Claude 5 系のみ。Haiku 4.5 等に送ると 400 になるので付けない。
+    if EFFORT_CAPABLE.search(args.model):
+        kwargs["output_config"] = {"effort": args.effort}
+
+    # 長文生成のためストリーミングで受ける(非ストリーミングは HTTP タイムアウトの恐れ)。
+    with client.messages.stream(**kwargs) as stream:
         for _ in stream.text_stream:
             print(".", end="", flush=True)
         message = stream.get_final_message()
@@ -451,6 +450,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="ファイルに保存せず標準出力に表示する(API 呼び出しは行う)",
     )
+    parser.add_argument(
+        "--print-prompt",
+        action="store_true",
+        help="組み立てたプロンプトを表示して終了する(API 呼び出しなし・課金なし)",
+    )
     return parser.parse_args(argv)
 
 
@@ -464,6 +468,24 @@ def main(argv: list[str] | None = None) -> int:
 
     now = datetime.now(JST)
     iso_date = now.strftime("%Y-%m-%dT%H:%M:%S+09:00")
+
+    if args.print_prompt:
+        system = render_system_prompt(args.products, iso_date)
+        user = render_user_prompt(args.target, args.products, iso_date)
+        print("=" * 70)
+        print(f"SYSTEM PROMPT ({len(system)} 文字)")
+        print("=" * 70)
+        print(system)
+        print("=" * 70)
+        print(f"USER PROMPT ({len(user)} 文字)")
+        print("=" * 70)
+        print(user)
+        effort = "有効" if EFFORT_CAPABLE.search(args.model) else "非対応のため送信しない"
+        print(
+            f"model={args.model}  max_tokens={args.max_tokens}  "
+            f"effort={args.effort} ({effort})"
+        )
+        return 0
 
     client = build_client()
 

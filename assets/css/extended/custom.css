@@ -199,16 +199,24 @@
   background: var(--tertiary);
 }
 
+/* --------------------------------------- 冒頭「この記事のポイント」 */
+
+/* 記事内で最初に現れる引用枠 = 冒頭のポイント3選。少し強調する */
+.post-content blockquote:first-of-type {
+  border-left-color: var(--primary);
+  background: var(--tertiary);
+}
+
 /* ------------------------------------------------------- PR表記の行 */
 
-/* Front Matter 直後の PR 表記は控えめに、ただし視認できる大きさで */
-.post-content > blockquote:first-child {
-  margin-top: 0;
-  padding: 0.7em 1em;
-  border-left-width: 3px;
-  background: transparent;
+/* 「本記事にはアフィリエイトリンクが含まれます。」の段落を控えめに。
+ * 段落内容では選択できないため、文字数の短い単独段落として扱わず、
+ * 記事側で .pr クラスを振らない前提の簡易指定にとどめる。 */
+.post-content p > em:only-child {
+  display: block;
   font-size: 0.85rem;
   color: var(--secondary);
+  font-style: normal;
 }
 
 /* --------------------------------------------------------- 目次(TOC) */
