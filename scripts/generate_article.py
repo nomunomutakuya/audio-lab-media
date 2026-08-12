@@ -52,6 +52,16 @@ CHARS_HARD_MAX = 2600
 # effort パラメータは Claude 5 系のみ対応。Haiku 4.5 に送ると 400 になる。
 EFFORT_CAPABLE = re.compile(r"(?:opus|sonnet|fable)-5")
 
+# プロンプトキャッシュが成立する最小トークン数。これを下回るとリクエストは
+# 通るがキャッシュは作られない(課金も通常入力のまま)。
+# 出典: https://platform.claude.com/docs/en/docs/build-with-claude/prompt-caching
+CACHE_MIN_TOKENS = {
+    "claude-opus-5": 512,
+    "claude-sonnet-5": 1024,
+    "claude-haiku-4-5": 4096,
+}
+CACHE_MIN_TOKENS_FALLBACK = 4096
+
 VIDEO_PLACEHOLDER = "VIDEO_ID"
 IMAGE_DIR = "/images/products"
 
@@ -70,13 +80,51 @@ SYSTEM_PROMPT = """\
 - 型番・価格・スペックに確証がなければ「公表なし」と書く。数値を推測で埋めない。
   存在しない製品を作らない。実機を試用した体験談を書かない。
 
+# 製品選定の厳格ルール(違反は記事全体の差し戻し対象)
+
+製品を挙げる前に、候補ごとに以下の3条件を必ず自己検証する。
+1つでも満たさない候補は選定から外し、別の製品に差し替える。
+
+## 1. カテゴリ一致(最重要)
+
+指定されたテーマ・カテゴリに **100%合致する製品のみ** を選ぶ。
+「近い用途」「関連機器」では不可。カテゴリが違うものは絶対に含めない。
+
+テーマが「オーディオインターフェース」の場合、以下は**すべて除外**する:
+
+- 単体マイクプリアンプ(例: Audient ASP800、Focusrite ISA One)
+- AD/DA・ADAT コンバーター単体(例: Behringer ADA8200)
+- PA・ライブ用ミキサー、配信用ミキサー
+- USB マイク、マイク、ヘッドホン、モニタースピーカー
+- DAC・ヘッドホンアンプ(音楽再生専用機)
+- MIDI インターフェース、コントローラー
+
+判定基準: 「PC と USB / Thunderbolt で接続し、単体でオーディオの入力と出力の
+両方を担い、専用ドライバで DAW の入出力デバイスになる」機器だけが該当する。
+ADAT 出力しか持たない機器、入力専用機器、出力専用機器は該当しない。
+
+## 2. 現行品・入手性
+
+- **現在新品で購入できる現行モデルのみ**。生産完了品・型落ち・ヴィンテージは除外。
+- Amazon やサウンドハウス等の大手 EC で新品在庫が流通している製品を選ぶ。
+- 世代がある製品は最新世代を挙げる(例: Scarlett は 4th Gen)。
+- 確証が持てない、または生産終了の可能性がある製品は選ばない。
+- 30万円超のハイエンド機や業務用大型機は、テーマが明示的に指定しない限り選ばない。
+
+## 3. 人気・収益性
+
+- DTM 初心者〜中級者に実績のある **国内市場の売れ筋定番機種** を中心に選ぶ。
+- 主力価格帯は1〜10万円台。読者が実際に購入検討する範囲に収める。
+- 国内で正規流通しておらず知名度も低いニッチ製品は選ばない。
+- 定番を軸にしつつ、価格帯と入出力数が重複しないように分散させる。
+
 # 出力形式
 
 Markdown 本文のみを出力する。コードフェンスで囲まない。Front Matter から始める。
 
 ---
 title: "記事タイトル(全角40文字以内)"
-date: {date}
+date: (ユーザーメッセージで指定された値をそのまま使う)
 draft: false
 slug: "english-kebab-case"
 categories: ["DTM機材"]
@@ -98,10 +146,11 @@ description: "SEO用要約(全角120文字以内)"
 
 4. PR表記を1行: 本記事にはアフィリエイトリンクが含まれます。
 
-# 製品セクション(製品数 = {products})
+# 製品セクション
 
 **製品を1つずつ独立した H2 セクションで扱う。まとめて論じるのは禁止。**
-{products}製品なら H2 を{products}個作る。見出しは `## 1. メーカー名 製品名` の形式で通し番号を振る。
+製品数はユーザーメッセージの指定に従い、N製品なら H2 を N 個作る。
+見出しは `## 1. メーカー名 製品名` の形式で通し番号を振る。
 
 各セクションは以下の順で構成する。
 
@@ -148,10 +197,52 @@ Front Matter の `date` には次の値をそのまま使ってください: {da
 """
 
 
-def render_system_prompt(products: int, iso_date: str) -> str:
-    return SYSTEM_PROMPT.format(
-        date=iso_date, products=products, lo=TARGET_CHARS[0], hi=TARGET_CHARS[1]
-    )
+def render_system_prompt() -> str:
+    """システムプロンプトを組み立てる。
+
+    可変値(日付・製品数・テーマ)は一切含めない。プロンプトキャッシュは
+    前方一致で判定されるため、1文字でも変わると全体がミスするため。
+    可変値はユーザーメッセージ側(キャッシュ区切りより後ろ)で渡す。
+    """
+    return SYSTEM_PROMPT.format(lo=TARGET_CHARS[0], hi=TARGET_CHARS[1])
+
+
+def cache_min_tokens(model: str) -> int:
+    """モデルごとのキャッシュ成立最小トークン数を返す。"""
+    for prefix, minimum in CACHE_MIN_TOKENS.items():
+        if model.startswith(prefix):
+            return minimum
+    return CACHE_MIN_TOKENS_FALLBACK
+
+
+def build_system_param(model: str, use_cache: bool, ttl: str) -> tuple[list[dict], str]:
+    """system 引数を dict のリスト形式で組み立てる。
+
+    戻り値は (system, 注記)。use_cache が False なら cache_control を付けない。
+    """
+    system_text = render_system_prompt()
+    block: dict = {"type": "text", "text": system_text}
+    note = "キャッシュなし"
+
+    if use_cache:
+        cache_control: dict = {"type": "ephemeral"}
+        if ttl != "5m":
+            cache_control["ttl"] = ttl
+        block["cache_control"] = cache_control
+
+        # 日本語はおおよそ1文字1トークン。最小値を下回る場合は
+        # リクエスト自体は通るがキャッシュが作られないため注記する。
+        estimated = len(system_text)
+        minimum = cache_min_tokens(model)
+        if estimated < minimum:
+            note = (
+                f"キャッシュ有効(ttl={ttl}) ただし推定 {estimated} トークンは "
+                f"{model} の最小 {minimum} トークン未満のため成立しない可能性あり"
+            )
+        else:
+            note = f"キャッシュ有効(ttl={ttl}, 推定 {estimated} トークン)"
+
+    return [block], note
 
 
 def render_user_prompt(target: str, products: int, iso_date: str) -> str:
@@ -356,10 +447,11 @@ def build_client() -> anthropic.Anthropic:
 
 def generate(client: anthropic.Anthropic, args: argparse.Namespace, iso_date: str) -> str:
     """Claude を呼び出して Markdown 本文を返す。"""
+    system, _ = build_system_param(args.model, not args.no_cache, args.cache_ttl)
     kwargs: dict = {
         "model": args.model,
         "max_tokens": args.max_tokens,
-        "system": render_system_prompt(args.products, iso_date),
+        "system": system,
         "messages": [
             {
                 "role": "user",
@@ -392,10 +484,26 @@ def generate(client: anthropic.Anthropic, args: argparse.Namespace, iso_date: st
         sys.exit("モデルからテキストが返りませんでした。")
 
     usage = message.usage
+    # 入力トークンの合計 = 非キャッシュ + キャッシュ書き込み + キャッシュ読み出し
+    written = getattr(usage, "cache_creation_input_tokens", 0) or 0
+    read = getattr(usage, "cache_read_input_tokens", 0) or 0
     print(
         f"  model={message.model} in={usage.input_tokens} out={usage.output_tokens}",
         file=sys.stderr,
     )
+    if written or read:
+        # 書き込みは通常入力の1.25倍、読み出しは0.1倍で課金される
+        state = "HIT" if read else "WRITE"
+        detail = "読み出し分は通常入力の0.1倍" if read else "書き込み分は通常入力の1.25倍"
+        print(
+            f"  キャッシュ {state}: write={written} read={read} tok ({detail})",
+            file=sys.stderr,
+        )
+    elif not args.no_cache:
+        print(
+            "  キャッシュ: 成立せず(最小トークン数未満の可能性)",
+            file=sys.stderr,
+        )
     return strip_code_fence(text)
 
 
@@ -456,6 +564,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="組み立てたプロンプトを表示して終了する(API 呼び出しなし・課金なし)",
     )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="プロンプトキャッシュを使わない(単発生成で書き込み割増を避けたいとき)",
+    )
+    parser.add_argument(
+        "--cache-ttl",
+        default="5m",
+        choices=["5m", "1h"],
+        help="キャッシュの保持時間。1h は書き込みが2倍課金だが間隔が空く運用に向く",
+    )
     return parser.parse_args(argv)
 
 
@@ -471,14 +590,17 @@ def main(argv: list[str] | None = None) -> int:
     iso_date = now.strftime("%Y-%m-%dT%H:%M:%S+09:00")
 
     if args.print_prompt:
-        system = render_system_prompt(args.products, iso_date)
+        system_param, cache_note = build_system_param(
+            args.model, not args.no_cache, args.cache_ttl
+        )
+        system = system_param[0]["text"]
         user = render_user_prompt(args.target, args.products, iso_date)
         print("=" * 70)
-        print(f"SYSTEM PROMPT ({len(system)} 文字)")
+        print(f"SYSTEM PROMPT ({len(system)} 文字) — 静的。可変値を含まない")
         print("=" * 70)
         print(system)
         print("=" * 70)
-        print(f"USER PROMPT ({len(user)} 文字)")
+        print(f"USER PROMPT ({len(user)} 文字) — 可変値はここだけ")
         print("=" * 70)
         print(user)
         effort = "有効" if EFFORT_CAPABLE.search(args.model) else "非対応のため送信しない"
@@ -486,6 +608,8 @@ def main(argv: list[str] | None = None) -> int:
             f"model={args.model}  max_tokens={args.max_tokens}  "
             f"effort={args.effort} ({effort})"
         )
+        print(f"cache_control: {system_param[0].get('cache_control', 'なし')}")
+        print(f"  → {cache_note}")
         return 0
 
     client = build_client()
