@@ -34,13 +34,14 @@ POSTS_DIR = REPO_ROOT / "content" / "posts"
 
 JST = timezone(timedelta(hours=9), "JST")
 
-# コスト優先の既定。claude-3-5-haiku / claude-3-5-sonnet-20241022 はいずれも
-# 提供終了(404)のため、現行の最安モデルを既定にする。
-# 品質を上げたいときは --model claude-sonnet-5 を付ける。
-DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+# 製品カテゴリの判断精度を優先して Sonnet 5 を既定にする。
+# コストを抑えたいときは --model claude-haiku-4-5-20251001 を付ける
+# (約1/3のコストだが、機種選定の妥当性は落ちる)。
+DEFAULT_MODEL = "claude-sonnet-5"
 DEFAULT_TARGET = "DTM向けオーディオインターフェースおすすめ5選 2026"
-# 本文1,500〜2,000文字 ≒ 出力1,500〜2,000トークン。思考分の余裕を見て 4000。
-DEFAULT_MAX_TOKENS = 4000
+# 本文1,500〜2,000文字 + 表 + 思考分の余裕。上限値は実際の生成分しか課金されない
+# ため、途中切れ(max_tokens 到達)による無駄打ちを避けて余裕を取る。
+DEFAULT_MAX_TOKENS = 6000
 DEFAULT_EFFORT = "low"
 DEFAULT_PRODUCTS = 5
 

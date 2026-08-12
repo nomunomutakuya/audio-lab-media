@@ -8,6 +8,9 @@ enableRobotsTXT = true
 enableInlineShortcodes = true
 enableEmoji = true
 
+# Google Analytics 4。PaperMod は params.env = production のときだけ出力する。
+googleAnalytics = "G-HBF74BMKD8"
+
 buildDrafts = false
 buildFuture = false
 buildExpired = false
